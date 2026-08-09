@@ -56,7 +56,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--green)}
 <div class="row"><div class="field"><label>Sale Amount (₹)</label><input id="sale" type="number" min="0" placeholder="0" oninput="calc()"></div><div class="field"><label>Material Cost (₹)</label><input id="cost" type="number" min="0" placeholder="0" oninput="calc()"></div></div>
 <div class="profitbox">Net Profit <span id="formProfit">₹0</span></div>
 <div class="field"><label>Notes</label><textarea id="notes" rows="3" placeholder="Optional notes..."></textarea></div>
-<button class="primary" onclick="saveEntry()">Add Entry</button><button class="secondary" onclick="closeForm()">Cancel</button>
+<button type="button" class="primary" id="saveBtn" onclick="saveEntry()">Add Entry</button><button class="secondary" onclick="closeForm()">Cancel</button>
 </div></div>
 <input type="file" id="file" accept=".json" style="display:none">
 
@@ -87,7 +87,39 @@ function openForm(id=null){editId=id;document.getElementById('formTitle').textCo
 function closeForm(){modal.classList.remove('show');editId=null}
 function setStatus(s){status=s;paidBtn.classList.toggle('active',s==='paid');pendingBtn.classList.toggle('active',s==='pending')}
 function calc(){formProfit.textContent=money((+sale.value||0)-(+cost.value||0))}
-function saveEntry(){if(!name.value.trim()){alert('Please enter Customer / Work Name');return}let x={id:editId||Date.now().toString(),date:date.value,name:name.value.trim(),sale:+sale.value||0,cost:+cost.value||0,status,notes:notes.value.trim()};if(editId)data=data.map(a=>a.id===editId?x:a);else data.push(x);localStorage.setItem('ledgerData',JSON.stringify(data));closeForm();init()}
+function saveEntry(){
+  const customer=(name.value||'').trim();
+  const entryDate=date.value || new Date().toISOString().slice(0,10);
+  if(!customer){alert('Please enter Customer / Work Name');name.focus();return;}
+  const x={
+    id:editId || ('entry_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)),
+    date:entryDate,
+    name:customer,
+    sale:Number(sale.value)||0,
+    cost:Number(cost.value)||0,
+    status:status||'pending',
+    notes:(notes.value||'').trim()
+  };
+  if(editId){
+    const i=data.findIndex(a=>a.id===editId);
+    if(i>=0) data[i]=x; else data.push(x);
+  }else data.push(x);
+  try{
+    localStorage.setItem('ledgerData',JSON.stringify(data));
+    const saved=JSON.parse(localStorage.getItem('ledgerData')||'[]');
+    if(!saved.some(a=>a.id===x.id)){
+      alert('Could not save entry. Please allow site storage in your browser.');
+      return;
+    }
+  }catch(e){
+    alert('Could not save entry. Please allow browser storage for this site.');
+    return;
+  }
+  closeForm();
+  init();
+  monthSelect.value=ym(entryDate);
+  render();
+}
 function editEntry(id){openForm(id)}
 function deleteEntry(id){if(confirm('Delete this entry?')){data=data.filter(x=>x.id!==id);localStorage.setItem('ledgerData',JSON.stringify(data));init()}}
 function formatDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}
