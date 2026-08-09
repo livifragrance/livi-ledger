@@ -44,10 +44,10 @@ initCloud();
 </script></head>
 <body>
 <header><div class="logo">L</div><div><div class="brand">LIVI</div><div class="sub">Sales & Material Cost</div></div></header>
-<button onclick="var p=document.getElementById('cloudPanel');if(p)p.style.display='flex';" style="position:fixed;right:20px;top:85px;z-index:6;border:1px solid #dedfd9;background:#fff;border-radius:20px;padding:10px 14px;color:#285322;font-weight:700">☁️ Cloud</button>
-<div id="cloudPanel" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;background:#0007;z-index:9999;align-items:center;justify-content:center;padding:18px;overflow:hidden;touch-action:none">
-<div id="cloudCard" style="position:relative;background:#fff;border-radius:22px;width:min(520px,100%);max-height:calc(100dvh - 36px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px;touch-action:auto">
-<button type="button" id="cloudCloseBtn" aria-label="Close Cloud Backup" onclick="closeCloud(event)" style="position:absolute;right:16px;top:12px;border:0;background:transparent;font-size:32px;line-height:1;padding:4px 10px;cursor:pointer;z-index:2">×</button>
+<button onclick="openCloud()" style="position:fixed;right:20px;top:85px;z-index:6;border:1px solid #dedfd9;background:#fff;border-radius:20px;padding:10px 14px;color:#285322;font-weight:700">☁️ Cloud</button>
+<div id="cloudPanel" style="display:none;position:fixed;inset:0;width:100vw;height:100dvh;background:#0007;z-index:9999;align-items:center;justify-content:center;padding:18px;overflow:hidden">
+<div id="cloudCard" style="position:relative;background:#fff;border-radius:22px;width:min(520px,100%);max-height:calc(100dvh - 36px);overflow-y:auto;padding:24px;flex:none">
+<button type="button" id="cloudCloseBtn" onclick="closeCloud(event)" aria-label="Close Cloud Backup" style="position:absolute;right:14px;top:10px;width:44px;height:44px;border:0;background:transparent;font-size:30px;line-height:44px;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
 <h2>☁️ LIVI Cloud Backup</h2><p id="cloudStatus" style="color:#666">Not connected</p>
 <div id="cloudLogin"><input id="cloudEmail" type="email" placeholder="Email" style="margin-bottom:10px"><input id="cloudPassword" type="password" placeholder="Password (6+ characters)">
 <div style="display:flex;gap:10px;margin-top:12px"><button onclick="cloudSignUp()" style="flex:1;padding:14px;background:#285322;color:#fff;border:0;border-radius:14px">Create Account</button><button onclick="cloudSignIn()" style="flex:1;padding:14px;background:#fff;border:1px solid #ddd;border-radius:14px">Login</button></div></div>
@@ -189,18 +189,17 @@ function importData(){file.click();file.onchange=()=>{let r=new FileReader();r.o
 monthSelect.onchange=render;search.oninput=render;filter.onchange=render;init();
 </script>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function(){
   const panel = document.getElementById('cloudPanel');
-  const closeBtn = document.getElementById('cloudCloseBtn');
-  if (closeBtn) closeBtn.addEventListener('click', function(e){ closeCloud(e); });
-  if (panel) panel.addEventListener('click', function(e){
-    if (e.target === panel) closeCloud(e);
-  });
+  if(panel){
+    panel.addEventListener('click', function(e){
+      if(e.target === panel) closeCloud(e);
+    });
+  }
   document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape') {
-      if (panel && panel.style.display === 'flex') closeCloud(e);
-    }
+    if(e.key === 'Escape' && panel && panel.style.display === 'flex') closeCloud(e);
   });
 });
 </script>
