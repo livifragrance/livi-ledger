@@ -43,7 +43,7 @@ initCloud();
 </script></head>
 <body>
 <header><div class="logo">L</div><div><div class="brand">LIVI</div><div class="sub">Sales & Material Cost</div></div></header>
-<button onclick="openCloud()" style="position:fixed;right:20px;top:85px;z-index:6;border:1px solid #dedfd9;background:#fff;border-radius:20px;padding:10px 14px;color:#285322;font-weight:700">☁️ Cloud</button>
+<button onclick="var p=document.getElementById('cloudPanel');if(p)p.style.display='flex';" style="position:fixed;right:20px;top:85px;z-index:6;border:1px solid #dedfd9;background:#fff;border-radius:20px;padding:10px 14px;color:#285322;font-weight:700">☁️ Cloud</button>
 <div id="cloudPanel" style="display:none;position:fixed;inset:0;background:#0007;z-index:20;align-items:center;justify-content:center;padding:18px">
 <div style="background:#fff;border-radius:22px;width:min(520px,100%);padding:24px">
 <button onclick="closeCloud()" style="float:right;border:0;background:none;font-size:28px">×</button>
@@ -186,5 +186,18 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 function exportData(){let b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ledger-backup.json';a.click()}
 function importData(){file.click();file.onchange=()=>{let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(Array.isArray(x)){data=x;localStorage.setItem('ledgerData',JSON.stringify(data));init()}}catch(e){alert('Invalid backup file')}};r.readAsText(file.files[0])}}
 monthSelect.onchange=render;search.oninput=render;filter.onchange=render;init();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('button').forEach(function(btn) {
+    if ((btn.textContent || '').trim().includes('Cloud')) {
+      btn.addEventListener('click', function () {
+        var p = document.getElementById('cloudPanel');
+        if (p) p.style.display = 'flex';
+      });
+    }
+  });
+});
 </script>
 </body></html>
