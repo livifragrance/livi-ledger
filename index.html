@@ -24,15 +24,14 @@ select:focus,input:focus,textarea:focus{border-color:var(--green)}
 .empty{text-align:center;color:#777;padding:40px}
 @media(max-width:650px){main{padding:25px 14px 100px}.title{font-size:34px}.grid{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:18px;min-height:130px}.value{font-size:24px}.entriesHead{flex-wrap:wrap}.entriesHead h2{width:100%;margin-bottom:0}.search,.filter{max-width:none}.numbers{grid-template-columns:repeat(3,1fr)}header{padding:10px 15px}.row{grid-template-columns:1fr}.form{padding:20px}.fab{right:18px;bottom:18px}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL="PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
-const SUPABASE_KEY="PASTE_YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY_HERE";
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+const SUPABASE_URL="https://vuryggxvvzhwxftantlu.supabase.co";
+const SUPABASE_KEY="sb_publishable_hOb6UyqfnDvDMzDo8TBrjg_hRkuScW1";
 let cloudClient=null,cloudUser=null;
 function cloudReady(){return window.supabase&&SUPABASE_URL.startsWith("https://")&&!SUPABASE_URL.includes("PASTE_")&&!SUPABASE_KEY.includes("PASTE_")}
 function initCloud(){if(!cloudReady())return;cloudClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);cloudClient.auth.getSession().then(({data})=>{cloudUser=data.session?.user||null;updateCloudUI()});cloudClient.auth.onAuthStateChange((_e,session)=>{cloudUser=session?.user||null;updateCloudUI()})}
-function openCloud(){const p=document.getElementById("cloudPanel");if(!p)return;p.style.display="flex";document.body.style.overflow="hidden";updateCloudUI()}
-function closeCloud(e){if(e)e.preventDefault();const p=document.getElementById("cloudPanel");if(p)p.style.display="none";document.body.style.overflow=""}
+function openCloud(){document.getElementById("cloudPanel").style.display="flex";updateCloudUI()}
+function closeCloud(){document.getElementById("cloudPanel").style.display="none"}
 function updateCloudUI(){let on=!!cloudUser;document.getElementById("cloudLogin").style.display=on?"none":"block";document.getElementById("cloudLogged").style.display=on?"block":"none";document.getElementById("cloudStatus").textContent=on?"Cloud backup connected":"Cloud backup is not connected";if(on)document.getElementById("cloudUser").textContent="Signed in: "+(cloudUser.email||"Account")}
 async function cloudSignUp(){if(!cloudReady()){alert("First add Supabase URL and key in index.html.");return}let email=cloudEmail.value.trim(),password=cloudPassword.value;if(!email||password.length<6){alert("Enter email and password (6+ characters).");return}let {data,error}=await cloudClient.auth.signUp({email,password});if(error){alert(error.message);return}if(data.session){cloudUser=data.session.user;updateCloudUI();await cloudSync()}else alert("Account created. Check your email, then Login.")}
 async function cloudSignIn(){if(!cloudReady()){alert("First add Supabase URL and key in index.html.");return}let {data,error}=await cloudClient.auth.signInWithPassword({email:cloudEmail.value.trim(),password:cloudPassword.value});if(error){alert(error.message);return}cloudUser=data.user;updateCloudUI();await cloudMerge()}
@@ -44,10 +43,10 @@ initCloud();
 </script></head>
 <body>
 <header><div class="logo">L</div><div><div class="brand">LIVI</div><div class="sub">Sales & Material Cost</div></div></header>
-<button onclick="openCloud()" style="position:fixed;right:20px;top:85px;z-index:6;border:1px solid #dedfd9;background:#fff;border-radius:20px;padding:10px 14px;color:#285322;font-weight:700">☁️ Cloud</button>
-<div id="cloudPanel" style="display:none;position:fixed;inset:0;width:100vw;height:100dvh;background:#0007;z-index:9999;align-items:center;justify-content:center;padding:18px;overflow:hidden">
-<div id="cloudCard" style="position:relative;background:#fff;border-radius:22px;width:min(520px,100%);max-height:calc(100dvh - 36px);overflow-y:auto;padding:24px;flex:none">
-<button type="button" id="cloudCloseBtn" onclick="closeCloud(event)" aria-label="Close Cloud Backup" style="position:absolute;right:14px;top:10px;width:44px;height:44px;border:0;background:transparent;font-size:30px;line-height:44px;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+<button onclick="var p=document.getElementById('cloudPanel');if(p)p.style.display='flex';" style="position:fixed;right:20px;top:85px;z-index:6;border:1px solid #dedfd9;background:#fff;border-radius:20px;padding:10px 14px;color:#285322;font-weight:700">☁️ Cloud</button>
+<div id="cloudPanel" style="display:none;position:fixed;inset:0;background:#0007;z-index:20;align-items:center;justify-content:center;padding:18px">
+<div style="background:#fff;border-radius:22px;width:min(520px,100%);padding:24px">
+<button onclick="closeCloud()" style="float:right;border:0;background:none;font-size:28px">×</button>
 <h2>☁️ LIVI Cloud Backup</h2><p id="cloudStatus" style="color:#666">Not connected</p>
 <div id="cloudLogin"><input id="cloudEmail" type="email" placeholder="Email" style="margin-bottom:10px"><input id="cloudPassword" type="password" placeholder="Password (6+ characters)">
 <div style="display:flex;gap:10px;margin-top:12px"><button onclick="cloudSignUp()" style="flex:1;padding:14px;background:#285322;color:#fff;border:0;border-radius:14px">Create Account</button><button onclick="cloudSignIn()" style="flex:1;padding:14px;background:#fff;border:1px solid #ddd;border-radius:14px">Login</button></div></div>
@@ -189,17 +188,15 @@ function importData(){file.click();file.onchange=()=>{let r=new FileReader();r.o
 monthSelect.onchange=render;search.oninput=render;filter.onchange=render;init();
 </script>
 
-
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-  const panel = document.getElementById('cloudPanel');
-  if(panel){
-    panel.addEventListener('click', function(e){
-      if(e.target === panel) closeCloud(e);
-    });
-  }
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && panel && panel.style.display === 'flex') closeCloud(e);
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('button').forEach(function(btn) {
+    if ((btn.textContent || '').trim().includes('Cloud')) {
+      btn.addEventListener('click', function () {
+        var p = document.getElementById('cloudPanel');
+        if (p) p.style.display = 'flex';
+      });
+    }
   });
 });
 </script>
