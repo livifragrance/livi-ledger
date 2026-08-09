@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#285322">
+<title>LIVI — Sales & Material Cost</title>
+<style>
+:root{--green:#285322;--green2:#376b30;--bg:#f5f6f1;--card:#fff;--text:#171917;--muted:#73766f;--border:#dedfd9;--red:#cc5c43;--gold:#d09a2e}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+header{height:72px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:12px 24px;gap:14px;position:sticky;top:0;z-index:5}
+.logo{width:48px;height:48px;border-radius:15px;background:var(--green);color:white;display:grid;place-items:center;font-size:26px}
+.brand{font-size:25px;font-weight:700}.sub{font-size:14px;color:var(--muted);margin-top:2px}
+main{max-width:1000px;margin:auto;padding:32px 22px 90px}.eyebrow{letter-spacing:5px;color:#666;font-size:13px;font-weight:700}.title{font-size:40px;font-weight:800;margin:10px 0 22px}
+select,input,textarea{font:inherit;border:1px solid var(--border);border-radius:14px;background:#fff;padding:15px;color:var(--text);outline:none;width:100%}
+select:focus,input:focus,textarea:focus{border-color:var(--green)}
+.month{margin-bottom:28px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.stat{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:25px;min-height:150px;box-shadow:0 2px 8px #00000008}.label{font-size:13px;letter-spacing:3px;color:#70736c;font-weight:700;text-transform:uppercase}.value{font-size:30px;font-weight:800;margin-top:16px}.sales{color:var(--green)}.material{color:var(--gold)}.profit{color:#38733a}.pending{color:var(--red)}
+.panel{background:#fff;border:1px solid var(--border);border-radius:20px;margin-top:22px;padding:24px;box-shadow:0 2px 8px #00000008}.panel h2{margin:0 0 4px;font-size:22px}.hint{color:var(--muted);margin-bottom:18px}.chart{height:220px;display:flex;align-items:flex-end;gap:10px;border-bottom:1px dashed #ddd;padding:10px 8px 0;overflow-x:auto}.barwrap{min-width:34px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}.bar{width:24px;border-radius:7px 7px 0 0;background:var(--green)}.bar.profitbar{background:var(--red)}.barlabel{font-size:11px;color:#777;padding:5px 0}
+.entriesHead{display:flex;gap:12px;align-items:center;margin-top:34px}.entriesHead h2{margin-right:auto;font-size:28px}.search{max-width:360px}.filter{max-width:190px}
+.entry{background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px;margin-top:14px}.entrytop{display:flex;justify-content:space-between;gap:12px}.name{font-size:20px;font-weight:700}.date{color:#777;margin-top:5px}.badge{padding:7px 12px;border-radius:18px;background:#fff0ec;color:var(--red);height:max-content}.badge.paid{background:#edf7ed;color:var(--green)}.numbers{display:grid;grid-template-columns:repeat(3,1fr);margin:20px 0;gap:12px}.numlabel{color:#777;font-size:14px}.num{font-weight:700;font-size:18px;margin-top:5px}.entrynote{color:#666}.actions{border-top:1px solid var(--border);margin-top:16px;padding-top:14px;display:flex;justify-content:flex-end;gap:22px}.actions button{background:none;border:0;font-size:15px;cursor:pointer;color:var(--green)}
+.fab{position:fixed;right:28px;bottom:28px;width:64px;height:64px;border-radius:50%;border:0;background:var(--green);color:#fff;font-size:32px;box-shadow:0 7px 20px #0003;cursor:pointer}
+.modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.modal.show{display:flex}.form{background:#fff;border-radius:22px;width:min(620px,100%);max-height:94vh;overflow:auto;padding:26px}.form h2{font-size:30px;margin:0 0 22px}.close{float:right;border:0;background:none;font-size:28px;cursor:pointer}.row{display:grid;grid-template-columns:1fr 1fr;gap:18px}.field{margin-bottom:18px}.field label{display:block;font-weight:600;margin-bottom:8px}.status{display:flex;gap:10px}.status button{flex:1;padding:14px;border:1px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;font-size:16px}.status button.active{background:#fff0ec;border-color:var(--red);color:var(--red)}.profitbox{padding:18px;border-radius:16px;background:#eef0eb;display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-bottom:18px}.profitbox span{color:#38733a;font-size:24px}.primary{width:100%;border:0;border-radius:28px;padding:16px;background:var(--green);color:#fff;font-size:17px;cursor:pointer}.secondary{width:100%;border:1px solid var(--border);border-radius:28px;padding:14px;background:#fff;margin-top:10px;font-size:16px;cursor:pointer}
+.toolbar{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}.toolbar button{padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:#fff;cursor:pointer}
+.empty{text-align:center;color:#777;padding:40px}
+@media(max-width:650px){main{padding:25px 14px 100px}.title{font-size:34px}.grid{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:18px;min-height:130px}.value{font-size:24px}.entriesHead{flex-wrap:wrap}.entriesHead h2{width:100%;margin-bottom:0}.search,.filter{max-width:none}.numbers{grid-template-columns:repeat(3,1fr)}header{padding:10px 15px}.row{grid-template-columns:1fr}.form{padding:20px}.fab{right:18px;bottom:18px}}
+</style>
+</head>
+<body>
+<header><div class="logo">L</div><div><div class="brand">LIVI</div><div class="sub">Sales & Material Cost</div></div></header>
+<main>
+<div class="eyebrow">DASHBOARD</div><div class="title" id="monthTitle"></div>
+<div class="month"><select id="monthSelect"></select></div>
+<section class="grid">
+<div class="stat"><div class="label">Total Sales</div><div class="value sales" id="sales">₹0</div></div>
+<div class="stat"><div class="label">Material Cost</div><div class="value material" id="material">₹0</div></div>
+<div class="stat"><div class="label">Net Profit</div><div class="value profit" id="profit">₹0</div></div>
+<div class="stat"><div class="label">Pending Amount</div><div class="value pending" id="pending">₹0</div></div>
+</section>
+<div class="stat" style="margin-top:18px"><div class="label">Total Entries</div><div class="value" id="count">0</div></div>
+
+<section class="panel"><h2>Sales vs Profit</h2><div class="hint">Daily breakdown for the month</div><div class="chart" id="chart"></div></section>
+
+<div class="entriesHead"><h2>Entries</h2><input class="search" id="search" placeholder="Search name..."><select class="filter" id="filter"><option value="all">All</option><option value="paid">Paid</option><option value="pending">Pending</option></select></div>
+<div id="entries"></div>
+<div class="toolbar"><button onclick="exportData()">Export Backup</button><button onclick="importData()">Import Backup</button></div>
+</main>
+<button class="fab" onclick="openForm()">+</button>
+
+<div class="modal" id="modal"><div class="form">
+<button class="close" onclick="closeForm()">×</button><h2 id="formTitle">New Sales Entry</h2>
+<div class="row">
+<div class="field"><label>Date</label><input type="date" id="date"></div>
+<div class="field"><label>Payment Status</label><div class="status"><button id="paidBtn" onclick="setStatus('paid')">✓ Paid</button><button id="pendingBtn" class="active" onclick="setStatus('pending')">◷ Pending</button></div></div>
+</div>
+<div class="field"><label>Customer / Work Name</label><input id="name" placeholder="e.g. Sharma Constructions"></div>
+<div class="row"><div class="field"><label>Sale Amount (₹)</label><input id="sale" type="number" min="0" placeholder="0" oninput="calc()"></div><div class="field"><label>Material Cost (₹)</label><input id="cost" type="number" min="0" placeholder="0" oninput="calc()"></div></div>
+<div class="profitbox">Net Profit <span id="formProfit">₹0</span></div>
+<div class="field"><label>Notes</label><textarea id="notes" rows="3" placeholder="Optional notes..."></textarea></div>
+<button class="primary" onclick="saveEntry()">Add Entry</button><button class="secondary" onclick="closeForm()">Cancel</button>
+</div></div>
+<input type="file" id="file" accept=".json" style="display:none">
+
+<script>
+let data=JSON.parse(localStorage.getItem('ledgerData')||'[]'), editId=null, status='pending';
+const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function money(n){return '₹'+Number(n||0).toLocaleString('en-IN')}
+function ym(d){return d.slice(0,7)}
+function currentYM(){let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function monthName(k){let [y,m]=k.split('-');return months[+m-1]+' '+y}
+function init(){
+ let keys=new Set(data.map(x=>ym(x.date))); keys.add(currentYM());
+ let arr=[...keys].sort().reverse(); monthSelect.innerHTML=arr.map(k=>`<option value="${k}">${monthName(k)}</option>`).join('');
+ monthSelect.value=currentYM(); render();
+}
+function render(){
+ let m=monthSelect.value, list=data.filter(x=>ym(x.date)===m);
+ let q=search.value.toLowerCase(), f=filter.value;
+ let shown=list.filter(x=>(x.name+' '+(x.notes||'')).toLowerCase().includes(q)&&(f==='all'||x.status===f));
+ let sales=list.reduce((a,x)=>a+Number(x.sale),0), cost=list.reduce((a,x)=>a+Number(x.cost),0), profit=sales-cost;
+ let pending=list.filter(x=>x.status==='pending').reduce((a,x)=>a+Number(x.sale),0);
+ monthTitle.textContent=monthName(m); document.getElementById('sales').textContent=money(sales);document.getElementById('material').textContent=money(cost);document.getElementById('profit').textContent=money(profit);document.getElementById('pending').textContent=money(pending);document.getElementById('count').textContent=list.length;
+ entries.innerHTML=shown.length?shown.sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<div class="entry"><div class="entrytop"><div><div class="name">${esc(x.name)}</div><div class="date">${formatDate(x.date)}</div></div><div class="badge ${x.status==='paid'?'paid':''}">${x.status==='paid'?'Paid':'Pending'}</div></div><div class="numbers"><div><div class="numlabel">Sale</div><div class="num">${money(x.sale)}</div></div><div><div class="numlabel">Material</div><div class="num">${money(x.cost)}</div></div><div><div class="numlabel">Profit</div><div class="num" style="color:#38733a">${money(x.sale-x.cost)}</div></div></div>${x.notes?`<div class="entrynote">${esc(x.notes)}</div>`:''}<div class="actions"><button onclick="editEntry('${x.id}')">✎ Edit</button><button onclick="deleteEntry('${x.id}')">♜ Delete</button></div></div>`).join(''):'<div class="empty">No entries for this month.</div>';
+ drawChart(list);
+}
+function drawChart(list){let by={};list.forEach(x=>{let d=x.date.slice(8);by[d]??={s:0,p:0};by[d].s+=+x.sale;by[d].p+=+x.sale-+x.cost});let vals=Object.values(by), max=Math.max(1,...vals.flatMap(v=>[v.s,v.p]));chart.innerHTML=Object.keys(by).sort().map(d=>`<div class="barwrap" title="Day ${d}: Sale ${money(by[d].s)}, Profit ${money(by[d].p)}"><div style="display:flex;gap:3px;align-items:flex-end;height:180px"><div class="bar" style="height:${Math.max(3,by[d].s/max*170)}px"></div><div class="bar profitbar" style="height:${Math.max(3,by[d].p/max*170)}px"></div></div><div class="barlabel">${d}</div></div>`).join('')||'<div class="empty">No chart data</div>'}
+function openForm(id=null){editId=id;document.getElementById('formTitle').textContent=id?'Edit Sales Entry':'New Sales Entry';let x=id?data.find(a=>a.id===id):null;date.value=x?.date||new Date().toISOString().slice(0,10);name.value=x?.name||'';sale.value=x?.sale||'';cost.value=x?.cost||'';notes.value=x?.notes||'';setStatus(x?.status||'pending');calc();modal.classList.add('show')}
+function closeForm(){modal.classList.remove('show');editId=null}
+function setStatus(s){status=s;paidBtn.classList.toggle('active',s==='paid');pendingBtn.classList.toggle('active',s==='pending')}
+function calc(){formProfit.textContent=money((+sale.value||0)-(+cost.value||0))}
+function saveEntry(){if(!name.value.trim()){alert('Please enter Customer / Work Name');return}let x={id:editId||Date.now().toString(),date:date.value,name:name.value.trim(),sale:+sale.value||0,cost:+cost.value||0,status,notes:notes.value.trim()};if(editId)data=data.map(a=>a.id===editId?x:a);else data.push(x);localStorage.setItem('ledgerData',JSON.stringify(data));closeForm();init()}
+function editEntry(id){openForm(id)}
+function deleteEntry(id){if(confirm('Delete this entry?')){data=data.filter(x=>x.id!==id);localStorage.setItem('ledgerData',JSON.stringify(data));init()}}
+function formatDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function exportData(){let b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ledger-backup.json';a.click()}
+function importData(){file.click();file.onchange=()=>{let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(Array.isArray(x)){data=x;localStorage.setItem('ledgerData',JSON.stringify(data));init()}}catch(e){alert('Invalid backup file')}};r.readAsText(file.files[0])}}
+monthSelect.onchange=render;search.oninput=render;filter.onchange=render;init();
+</script>
+</body></html>
