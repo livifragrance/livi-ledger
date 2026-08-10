@@ -23,13 +23,51 @@ select:focus,input:focus,textarea:focus{border-color:var(--green)}
 .toolbar{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}.toolbar button{padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:#fff;cursor:pointer}
 .empty{text-align:center;color:#777;padding:40px}
 @media(max-width:650px){main{padding:25px 14px 100px}.title{font-size:34px}.grid{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:18px;min-height:130px}.value{font-size:24px}.entriesHead{flex-wrap:wrap}.entriesHead h2{width:100%;margin-bottom:0}.search,.filter{max-width:none}.numbers{grid-template-columns:repeat(3,1fr)}header{padding:10px 15px}.row{grid-template-columns:1fr}.form{padding:20px}.fab{right:18px;bottom:18px}}
+
+/* Auth */
+.authScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
+.authCard{width:min(430px,100%);background:#fff;border:1px solid var(--border);border-radius:24px;padding:30px;box-shadow:0 10px 40px #00000012}
+.authLogo{width:64px;height:64px;border-radius:18px;background:var(--green);color:#fff;display:grid;place-items:center;font-size:34px;margin:0 auto 18px}
+.authCard h1{text-align:center;margin:0;font-size:30px}.authSub{text-align:center;color:var(--muted);margin:7px 0 25px}
+.authCard .field{margin-bottom:16px}.authCard label{display:block;font-weight:600;margin-bottom:8px}
+.authMsg{padding:12px 14px;border-radius:12px;background:#fff6df;color:#7a5a00;margin-bottom:15px;display:none;font-size:14px}
+.authMsg.error{background:#fff0ec;color:var(--red)}.authMsg.success{background:#edf7ed;color:var(--green)}
+.authSwitch{text-align:center;margin-top:16px;color:var(--muted);font-size:14px}.authSwitch button{border:0;background:none;color:var(--green);font-weight:700;cursor:pointer}
+.userbar{margin-left:auto;display:flex;align-items:center;gap:10px}.useremail{font-size:13px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logout{border:1px solid var(--border);background:#fff;border-radius:12px;padding:9px 12px;cursor:pointer;color:var(--green)}
+.loadingScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:110;font-weight:700;color:var(--green)}
+.sync{font-size:12px;color:var(--muted);margin-top:7px}
+@media(max-width:650px){.userbar{gap:6px}.useremail{display:none}.logout{padding:8px 10px}.authCard{padding:24px}}
 </style>
 </head>
+
 <body>
-<header><div class="logo">L</div><div><div class="brand">LIVI</div><div class="sub">Sales & Material Cost</div></div></header>
+<div class="loadingScreen" id="loadingScreen">Loading LIVI…</div>
+
+<div class="authScreen" id="authScreen" style="display:none">
+  <div class="authCard">
+    <div class="authLogo">L</div>
+    <h1 id="authTitle">LIVI Login</h1>
+    <div class="authSub">Sales & Material Cost</div>
+    <div class="authMsg" id="authMsg"></div>
+    <form id="authForm">
+      <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="Enter your email" required></div>
+      <div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Enter password" minlength="6" required></div>
+      <button class="primary" id="authSubmit" type="submit">Login</button>
+    </form>
+    <div class="authSwitch"><span id="authSwitchText">Don't have an account?</span> <button type="button" id="authSwitchBtn">Create account</button></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<header>
+  <div class="logo">L</div>
+  <div><div class="brand">LIVI</div><div class="sub">Sales & Material Cost</div></div>
+  <div class="userbar"><span class="useremail" id="userEmail"></span><button class="logout" onclick="logout()">Logout</button></div>
+</header>
 <main>
 <div class="eyebrow">DASHBOARD</div><div class="title" id="monthTitle"></div>
-<div class="month"><select id="monthSelect"></select></div>
+<div class="month"><select id="monthSelect"></select><div class="sync" id="syncStatus">Cloud data</div></div>
 <section class="grid">
 <div class="stat"><div class="label">Total Sales</div><div class="value sales" id="sales">₹0</div></div>
 <div class="stat"><div class="label">Material Cost</div><div class="value material" id="material">₹0</div></div>
@@ -50,117 +88,226 @@ select:focus,input:focus,textarea:focus{border-color:var(--green)}
 <button class="close" onclick="closeForm()">×</button><h2 id="formTitle">New Sales Entry</h2>
 <div class="row">
 <div class="field"><label>Date</label><input type="date" id="date"></div>
-<div class="field"><label>Payment Status</label><div class="status"><button id="paidBtn" onclick="setStatus('paid')">✓ Paid</button><button id="pendingBtn" class="active" onclick="setStatus('pending')">◷ Pending</button></div></div>
+<div class="field"><label>Payment Status</label><div class="status"><button type="button" id="paidBtn" onclick="setStatus('paid')">✓ Paid</button><button type="button" id="pendingBtn" class="active" onclick="setStatus('pending')">◷ Pending</button></div></div>
 </div>
 <div class="field"><label>Customer / Work Name</label><input id="name" placeholder="e.g. Sharma Constructions"></div>
 <div class="row"><div class="field"><label>Sale Amount (₹)</label><input id="sale" type="number" min="0" placeholder="0" oninput="calc()"></div><div class="field"><label>Material Cost (₹)</label><input id="cost" type="number" min="0" placeholder="0" oninput="calc()"></div></div>
 <div class="profitbox">Net Profit <span id="formProfit">₹0</span></div>
 <div class="field"><label>Notes</label><textarea id="notes" rows="3" placeholder="Optional notes..."></textarea></div>
-<button type="button" class="primary" id="saveBtn" onclick="saveEntry()">Add Entry</button><button class="secondary" onclick="closeForm()">Cancel</button>
+<button type="button" class="primary" id="saveBtn" onclick="saveEntry()">Add Entry</button><button type="button" class="secondary" onclick="closeForm()">Cancel</button>
 </div></div>
 <input type="file" id="file" accept=".json" style="display:none">
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-let data=JSON.parse(localStorage.getItem('ledgerData')||'[]'), editId=null, status='pending';
+const SUPABASE_URL = 'https://vuryggxvvzhwxftantlu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_hOb6UyqfnDvDMzDo8TBrjg_hRkuScW1';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let data=[], editId=null, status='pending', authMode='login', currentUser=null;
 const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const $ = id => document.getElementById(id);
 function money(n){return '₹'+Number(n||0).toLocaleString('en-IN')}
 function ym(d){return d.slice(0,7)}
 function currentYM(){let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function monthName(k){let [y,m]=k.split('-');return months[+m-1]+' '+y}
+function setAuthMsg(msg,type=''){const el=$('authMsg');el.textContent=msg;el.className='authMsg'+(type?' '+type:'');el.style.display=msg?'block':'none'}
+function setSync(msg){$('syncStatus').textContent=msg}
+
+function setAuthMode(mode){
+  authMode=mode;
+  $('authTitle').textContent=mode==='login'?'LIVI Login':'Create LIVI Account';
+  $('authSubmit').textContent=mode==='login'?'Login':'Create Account';
+  $('authSwitchText').textContent=mode==='login'?"Don't have an account?":'Already have an account?';
+  $('authSwitchBtn').textContent=mode==='login'?'Create account':'Login';
+  $('authPassword').autocomplete=mode==='login'?'current-password':'new-password';
+  setAuthMsg('');
+}
+
+$('authSwitchBtn').addEventListener('click',()=>setAuthMode(authMode==='login'?'signup':'login'));
+
+$('authForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  setAuthMsg('');
+  const email=$('authEmail').value.trim();
+  const password=$('authPassword').value;
+  $('authSubmit').disabled=true;
+  $('authSubmit').textContent=authMode==='login'?'Logging in…':'Creating…';
+  try{
+    if(authMode==='login'){
+      const {error}=await db.auth.signInWithPassword({email,password});
+      if(error) throw error;
+    }else{
+      const {data:res,error}=await db.auth.signUp({email,password});
+      if(error) throw error;
+      if(!res.session){
+        setAuthMsg('Account created. Please verify your email, then login.','success');
+        setAuthMode('login');
+      }else{
+        setAuthMsg('Account created.','success');
+      }
+    }
+  }catch(err){
+    setAuthMsg(err.message||'Something went wrong.','error');
+  }finally{
+    $('authSubmit').disabled=false;
+    $('authSubmit').textContent=authMode==='login'?'Login':'Create Account';
+  }
+});
+
+async function logout(){
+  await db.auth.signOut();
+}
+
+function showAuth(){
+  $('loadingScreen').style.display='none';
+  $('app').style.display='none';
+  $('authScreen').style.display='flex';
+  setAuthMode('login');
+}
+async function showApp(session){
+  currentUser=session.user;
+  $('loadingScreen').style.display='none';
+  $('authScreen').style.display='none';
+  $('app').style.display='block';
+  $('userEmail').textContent=currentUser.email||'';
+  await loadCloudData();
+}
+
+async function loadCloudData(){
+  setSync('Loading cloud data…');
+  try{
+    const {data:rows,error}=await db.from('livi_entries').select('*').order('entry_date',{ascending:false});
+    if(error) throw error;
+    data=(rows||[]).map(row=>({
+      id:row.id,date:row.entry_date,name:row.customer_name,
+      sale:Number(row.sale_amount)||0,cost:Number(row.material_cost)||0,
+      status:row.payment_status||'pending',notes:row.notes||''
+    }));
+    // If this browser has old local entries and the cloud account has none,
+    // migrate them once so existing LIVI work is not lost.
+    if(data.length===0){
+      const old=JSON.parse(localStorage.getItem('ledgerData')||'[]');
+      if(Array.isArray(old)&&old.length){
+        const rowsToInsert=old.map(x=>({
+          id:x.id||('entry_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)),
+          user_id:currentUser.id,
+          entry_date:x.date,
+          customer_name:x.name,
+          sale_amount:Number(x.sale)||0,
+          material_cost:Number(x.cost)||0,
+          payment_status:x.status||'pending',
+          notes:x.notes||''
+        }));
+        const {error:upErr}=await db.from('livi_entries').upsert(rowsToInsert);
+        if(!upErr){
+          data=old.map(x=>({...x}));
+          setSync('Cloud synced • old local data migrated');
+        }else{
+          setSync('Cloud connected');
+        }
+      }else setSync('Cloud connected');
+    }else setSync('Cloud connected');
+    init();
+  }catch(err){
+    console.error(err);
+    setSync('Cloud error');
+    alert('Could not load cloud data: '+(err.message||'Check Supabase table/RLS settings.'));
+  }
+}
+
 function init(){
  let keys=new Set(data.map(x=>ym(x.date))); keys.add(currentYM());
- let arr=[...keys].sort().reverse(); monthSelect.innerHTML=arr.map(k=>`<option value="${k}">${monthName(k)}</option>`).join('');
- monthSelect.value=currentYM(); render();
+ let arr=[...keys].sort().reverse();
+ $('monthSelect').innerHTML=arr.map(k=>`<option value="${k}">${monthName(k)}</option>`).join('');
+ $('monthSelect').value=currentYM();
+ if(![...$('monthSelect').options].some(o=>o.value===currentYM())) $('monthSelect').value=arr[0]||currentYM();
+ render();
 }
 function render(){
- let m=monthSelect.value, list=data.filter(x=>ym(x.date)===m);
- let q=search.value.toLowerCase(), f=filter.value;
+ let m=$('monthSelect').value, list=data.filter(x=>ym(x.date)===m);
+ let q=$('search').value.toLowerCase(), f=$('filter').value;
  let shown=list.filter(x=>(x.name+' '+(x.notes||'')).toLowerCase().includes(q)&&(f==='all'||x.status===f));
  let sales=list.reduce((a,x)=>a+Number(x.sale),0), cost=list.reduce((a,x)=>a+Number(x.cost),0), profit=sales-cost;
  let pending=list.filter(x=>x.status==='pending').reduce((a,x)=>a+Number(x.sale),0);
- monthTitle.textContent=monthName(m); document.getElementById('sales').textContent=money(sales);document.getElementById('material').textContent=money(cost);document.getElementById('profit').textContent=money(profit);document.getElementById('pending').textContent=money(pending);document.getElementById('count').textContent=list.length;
- entries.innerHTML=shown.length?shown.sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<div class="entry"><div class="entrytop"><div><div class="name">${esc(x.name)}</div><div class="date">${formatDate(x.date)}</div></div><div class="badge ${x.status==='paid'?'paid':''}">${x.status==='paid'?'Paid':'Pending'}</div></div><div class="numbers"><div><div class="numlabel">Sale</div><div class="num">${money(x.sale)}</div></div><div><div class="numlabel">Material</div><div class="num">${money(x.cost)}</div></div><div><div class="numlabel">Profit</div><div class="num" style="color:#38733a">${money(x.sale-x.cost)}</div></div></div>${x.notes?`<div class="entrynote">${esc(x.notes)}</div>`:''}<div class="actions"><button onclick="editEntry('${x.id}')">✎ Edit</button><button onclick="deleteEntry('${x.id}')">♜ Delete</button></div></div>`).join(''):'<div class="empty">No entries for this month.</div>';
+ $('monthTitle').textContent=monthName(m); $('sales').textContent=money(sales);$('material').textContent=money(cost);$('profit').textContent=money(profit);$('pending').textContent=money(pending);$('count').textContent=list.length;
+ $('entries').innerHTML=shown.length?shown.sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<div class="entry"><div class="entrytop"><div><div class="name">${esc(x.name)}</div><div class="date">${formatDate(x.date)}</div></div><div class="badge ${x.status==='paid'?'paid':''}">${x.status==='paid'?'Paid':'Pending'}</div></div><div class="numbers"><div><div class="numlabel">Sale</div><div class="num">${money(x.sale)}</div></div><div><div class="numlabel">Material</div><div class="num">${money(x.cost)}</div></div><div><div class="numlabel">Profit</div><div class="num" style="color:#38733a">${money(x.sale-x.cost)}</div></div></div>${x.notes?`<div class="entrynote">${esc(x.notes)}</div>`:''}<div class="actions"><button onclick="editEntry('${x.id}')">✎ Edit</button><button onclick="deleteEntry('${x.id}')">♜ Delete</button></div></div>`).join(''):'<div class="empty">No entries for this month.</div>';
  drawChart(list);
 }
-function drawChart(list){let by={};list.forEach(x=>{let d=x.date.slice(8);by[d]??={s:0,p:0};by[d].s+=+x.sale;by[d].p+=+x.sale-+x.cost});let vals=Object.values(by), max=Math.max(1,...vals.flatMap(v=>[v.s,v.p]));chart.innerHTML=Object.keys(by).sort().map(d=>`<div class="barwrap" title="Day ${d}: Sale ${money(by[d].s)}, Profit ${money(by[d].p)}"><div style="display:flex;gap:3px;align-items:flex-end;height:180px"><div class="bar" style="height:${Math.max(3,by[d].s/max*170)}px"></div><div class="bar profitbar" style="height:${Math.max(3,by[d].p/max*170)}px"></div></div><div class="barlabel">${d}</div></div>`).join('')||'<div class="empty">No chart data</div>'}
+function drawChart(list){
+ let by={};
+ list.forEach(x=>{let d=x.date.slice(8);if(!by[d])by[d]={s:0,p:0};by[d].s+=+x.sale;by[d].p+=+x.sale-+x.cost});
+ let vals=Object.values(by), max=Math.max(1,...vals.flatMap(v=>[v.s,v.p]));
+ $('chart').innerHTML=Object.keys(by).sort().map(d=>`<div class="barwrap" title="Day ${d}: Sale ${money(by[d].s)}, Profit ${money(by[d].p)}"><div style="display:flex;gap:3px;align-items:flex-end;height:180px"><div class="bar" style="height:${Math.max(3,by[d].s/max*170)}px"></div><div class="bar profitbar" style="height:${Math.max(3,by[d].p/max*170)}px"></div></div><div class="barlabel">${d}</div></div>`).join('')||'<div class="empty">No chart data</div>';
+}
 function openForm(id=null){
-  editId=id;
-  document.getElementById('formTitle').textContent=id?'Edit Sales Entry':'New Sales Entry';
-  const x=id?data.find(a=>a.id===id):null;
-  const dateEl=document.getElementById('date');
-  const nameEl=document.getElementById('name');
-  const saleEl=document.getElementById('sale');
-  const costEl=document.getElementById('cost');
-  const notesEl=document.getElementById('notes');
-
-  dateEl.value=x?.date||new Date().toISOString().slice(0,10);
-  nameEl.value=x?.name||'';
-  saleEl.value=x?.sale??'';
-  costEl.value=x?.cost??'';
-  notesEl.value=x?.notes||'';
-  setStatus(x?.status||'pending');
-  calc();
-  document.getElementById('modal').classList.add('show');
+ editId=id;
+ $('formTitle').textContent=id?'Edit Sales Entry':'New Sales Entry';
+ const x=id?data.find(a=>a.id===id):null;
+ $('date').value=x?.date||new Date().toISOString().slice(0,10);
+ $('name').value=x?.name||''; $('sale').value=x?.sale??''; $('cost').value=x?.cost??''; $('notes').value=x?.notes||'';
+ setStatus(x?.status||'pending'); calc(); $('modal').classList.add('show');
 }
-function closeForm(){modal.classList.remove('show');editId=null}
-function setStatus(s){status=s;paidBtn.classList.toggle('active',s==='paid');pendingBtn.classList.toggle('active',s==='pending')}
-function calc(){
-  const saleEl=document.getElementById('sale');
-  const costEl=document.getElementById('cost');
-  document.getElementById('formProfit').textContent=money((Number(saleEl.value)||0)-(Number(costEl.value)||0));
-}
-function saveEntry(){
-  const customerEl=document.getElementById('name');
-  const dateEl=document.getElementById('date');
-  const saleEl=document.getElementById('sale');
-  const costEl=document.getElementById('cost');
-  const notesEl=document.getElementById('notes');
+function closeForm(){$('modal').classList.remove('show');editId=null}
+function setStatus(s){status=s;$('paidBtn').classList.toggle('active',s==='paid');$('pendingBtn').classList.toggle('active',s==='pending')}
+function calc(){$('formProfit').textContent=money((Number($('sale').value)||0)-(Number($('cost').value)||0))}
 
-  const customer=(customerEl.value||'').trim();
-  const entryDate=dateEl.value || new Date().toISOString().slice(0,10);
-
-  if(!customer){
-    alert('Please enter Customer / Work Name');
-    customerEl.focus();
-    return;
-  }
-
-  const x={
-    id:editId || ('entry_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)),
-    date:entryDate,
-    name:customer,
-    sale:Number(saleEl.value)||0,
-    cost:Number(costEl.value)||0,
-    status:status||'pending',
-    notes:(notesEl.value||'').trim()
-  };
-
-  if(editId){
-    const i=data.findIndex(a=>a.id===editId);
-    if(i>=0) data[i]=x;
-    else data.push(x);
-  }else{
-    data.push(x);
-  }
-
-  try{
-    localStorage.setItem('ledgerData',JSON.stringify(data));
-  }catch(e){
-    alert('Could not save entry. Please allow browser storage for this site.');
-    return;
-  }
-
-  closeForm();
-  init();
-  monthSelect.value=ym(entryDate);
-  render();
+async function saveEntry(){
+ const customer=($('name').value||'').trim(), entryDate=$('date').value||new Date().toISOString().slice(0,10);
+ if(!customer){alert('Please enter Customer / Work Name');$('name').focus();return}
+ const x={id:editId||('entry_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)),date:entryDate,name:customer,sale:Number($('sale').value)||0,cost:Number($('cost').value)||0,status:status||'pending',notes:($('notes').value||'').trim()};
+ $('saveBtn').disabled=true;$('saveBtn').textContent=editId?'Saving…':'Adding…';
+ try{
+   const row={id:x.id,user_id:currentUser.id,entry_date:x.date,customer_name:x.name,sale_amount:x.sale,material_cost:x.cost,payment_status:x.status,notes:x.notes};
+   const {error}=await db.from('livi_entries').upsert(row);
+   if(error) throw error;
+   if(editId){const i=data.findIndex(a=>a.id===editId);if(i>=0)data[i]=x;else data.push(x)}else data.push(x);
+   closeForm();init();$('monthSelect').value=ym(entryDate);render();setSync('Cloud synced');
+ }catch(err){alert('Could not save entry: '+(err.message||'Check Supabase RLS/policies.'))}
+ finally{$('saveBtn').disabled=false;$('saveBtn').textContent=editId?'Save Changes':'Add Entry'}
 }
 function editEntry(id){openForm(id)}
-function deleteEntry(id){if(confirm('Delete this entry?')){data=data.filter(x=>x.id!==id);localStorage.setItem('ledgerData',JSON.stringify(data));init()}}
+async function deleteEntry(id){
+ if(!confirm('Delete this entry?'))return;
+ try{
+   const {error}=await db.from('livi_entries').delete().eq('id',id);
+   if(error)throw error;
+   data=data.filter(x=>x.id!==id);render();setSync('Cloud synced');
+ }catch(err){alert('Could not delete entry: '+(err.message||''))}
+}
 function formatDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function exportData(){let b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ledger-backup.json';a.click()}
-function importData(){file.click();file.onchange=()=>{let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(Array.isArray(x)){data=x;localStorage.setItem('ledgerData',JSON.stringify(data));init()}}catch(e){alert('Invalid backup file')}};r.readAsText(file.files[0])}}
-monthSelect.onchange=render;search.oninput=render;filter.onchange=render;init();
+
+function exportData(){
+ let b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');
+ a.href=URL.createObjectURL(b);a.download='LIVI-cloud-backup.json';a.click();URL.revokeObjectURL(a.href);
+}
+function importData(){
+ $('file').click();
+ $('file').onchange=async ()=>{
+   const f=$('file').files[0];if(!f)return;
+   try{
+     const x=JSON.parse(await f.text()); if(!Array.isArray(x))throw new Error('Invalid backup');
+     const rows=x.map(v=>({id:v.id||('entry_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)),user_id:currentUser.id,entry_date:v.date,customer_name:v.name,sale_amount:Number(v.sale)||0,material_cost:Number(v.cost)||0,payment_status:v.status||'pending',notes:v.notes||''}));
+     const {error}=await db.from('livi_entries').upsert(rows);if(error)throw error;
+     await loadCloudData(); alert('Backup imported successfully.');
+   }catch(e){alert('Invalid backup or import failed: '+(e.message||''))}
+   $('file').value='';
+ };
+}
+
+$('monthSelect').onchange=render;$('search').oninput=render;$('filter').onchange=render;
+
+db.auth.onAuthStateChange((event,session)=>{
+  setTimeout(()=>{ if(session) showApp(session); else showAuth(); },0);
+});
+(async()=>{
+  const {data:{session}}=await db.auth.getSession();
+  if(session) await showApp(session); else showAuth();
+})();
+window.openForm=openForm;window.closeForm=closeForm;window.setStatus=setStatus;window.calc=calc;window.saveEntry=saveEntry;window.editEntry=editEntry;window.deleteEntry=deleteEntry;window.exportData=exportData;window.importData=importData;window.logout=logout;
 </script>
 </body></html>
+
