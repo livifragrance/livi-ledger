@@ -179,7 +179,7 @@ async function showApp(session){
 async function loadCloudData(){
   setSync('Loading cloud data…');
   try{
-    const {data:rows,error}=await db.from('livi_entries').select('*').order('entry_date',{ascending:false});
+    const {data:rows,error}=await db.from('livi_entries').select('*').eq('user_id',currentUser.id).order('entry_date',{ascending:false});
     if(error) throw error;
     data=(rows||[]).map(row=>({
       id:row.id,date:row.entry_date,name:row.customer_name,
@@ -272,7 +272,7 @@ function editEntry(id){openForm(id)}
 async function deleteEntry(id){
  if(!confirm('Delete this entry?'))return;
  try{
-   const {error}=await db.from('livi_entries').delete().eq('id',id);
+   const {error}=await db.from('livi_entries').delete().eq('id',id).eq('user_id',currentUser.id);
    if(error)throw error;
    data=data.filter(x=>x.id!==id);render();setSync('Cloud synced');
  }catch(err){alert('Could not delete entry: '+(err.message||''))}
