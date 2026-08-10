@@ -24,34 +24,10 @@ select:focus,input:focus,textarea:focus{border-color:var(--green)}
 .empty{text-align:center;color:#777;padding:40px}
 @media(max-width:650px){main{padding:25px 14px 100px}.title{font-size:34px}.grid{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:18px;min-height:130px}.value{font-size:24px}.entriesHead{flex-wrap:wrap}.entriesHead h2{width:100%;margin-bottom:0}.search,.filter{max-width:none}.numbers{grid-template-columns:repeat(3,1fr)}header{padding:10px 15px}.row{grid-template-columns:1fr}.form{padding:20px}.fab{right:18px;bottom:18px}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-const SUPABASE_URL="https://vuryggxvvzhwxftantlu.supabase.co";
-const SUPABASE_KEY="sb_publishable_hOb6UyqfnDvDMzDo8TBrjg_hRkuScW1";
-let cloudClient=null,cloudUser=null;
-function cloudReady(){return window.supabase&&SUPABASE_URL.startsWith("https://")&&!SUPABASE_URL.includes("PASTE_")&&!SUPABASE_KEY.includes("PASTE_")}
-function initCloud(){if(!cloudReady())return;cloudClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);cloudClient.auth.getSession().then(({data})=>{cloudUser=data.session?.user||null;updateCloudUI()});cloudClient.auth.onAuthStateChange((_e,session)=>{cloudUser=session?.user||null;updateCloudUI()})}
-function openCloud(){document.getElementById("cloudPanel").style.display="flex";updateCloudUI()}
-function closeCloud(){document.getElementById("cloudPanel").style.display="none"}
-function updateCloudUI(){let on=!!cloudUser;document.getElementById("cloudLogin").style.display=on?"none":"block";document.getElementById("cloudLogged").style.display=on?"block":"none";document.getElementById("cloudStatus").textContent=on?"Cloud backup connected":"Cloud backup is not connected";if(on)document.getElementById("cloudUser").textContent="Signed in: "+(cloudUser.email||"Account")}
-async function cloudSignUp(){if(!cloudReady()){alert("First add Supabase URL and key in index.html.");return}let email=cloudEmail.value.trim(),password=cloudPassword.value;if(!email||password.length<6){alert("Enter email and password (6+ characters).");return}let {data,error}=await cloudClient.auth.signUp({email,password});if(error){alert(error.message);return}if(data.session){cloudUser=data.session.user;updateCloudUI();await cloudSync()}else alert("Account created. Check your email, then Login.")}
-async function cloudSignIn(){if(!cloudReady()){alert("First add Supabase URL and key in index.html.");return}let {data,error}=await cloudClient.auth.signInWithPassword({email:cloudEmail.value.trim(),password:cloudPassword.value});if(error){alert(error.message);return}cloudUser=data.user;updateCloudUI();await cloudMerge()}
-async function cloudLogout(){if(cloudClient)await cloudClient.auth.signOut();cloudUser=null;updateCloudUI()}
-async function cloudSync(){if(!cloudUser){alert("Please login first.");return}let rows=data.map(x=>({id:x.id,user_id:cloudUser.id,entry_date:x.date,customer_name:x.name,sale_amount:+x.sale||0,material_cost:+x.cost||0,payment_status:x.status,notes:x.notes||"",updated_at:x.updatedAt||new Date().toISOString()}));let {error}=await cloudClient.from("livi_entries").upsert(rows,{onConflict:"id"});if(error){alert("Sync failed: "+error.message);return}document.getElementById("cloudStatus").textContent="Cloud backup updated ✓"}
-async function cloudRestore(){if(!cloudUser)return;let {data:rows,error}=await cloudClient.from("livi_entries").select("*").eq("user_id",cloudUser.id);if(error){alert("Restore failed: "+error.message);return}data=rows.map(r=>({id:r.id,date:r.entry_date,name:r.customer_name,sale:+r.sale_amount||0,cost:+r.material_cost||0,status:r.payment_status,notes:r.notes||"",updatedAt:r.updated_at}));localStorage.setItem("ledgerData",JSON.stringify(data));init();alert("Cloud data restored ✓")}
-async function cloudMerge(){let {data:rows,error}=await cloudClient.from("livi_entries").select("*").eq("user_id",cloudUser.id);if(error){alert(error.message);return}let map=new Map(data.map(x=>[x.id,x]));rows.forEach(r=>{if(!map.has(r.id))map.set(r.id,{id:r.id,date:r.entry_date,name:r.customer_name,sale:+r.sale_amount||0,cost:+r.material_cost||0,status:r.payment_status,notes:r.notes||"",updatedAt:r.updated_at})});data=[...map.values()];localStorage.setItem("ledgerData",JSON.stringify(data));await cloudSync();init()}
-initCloud();
-</script></head>
+</head>
 <body>
 <header><div class="logo">L</div><div><div class="brand">LIVI</div><div class="sub">Sales & Material Cost</div></div></header>
-<button onclick="var p=document.getElementById('cloudPanel');if(p)p.style.display='flex';" style="position:fixed;right:20px;top:85px;z-index:6;border:1px solid #dedfd9;background:#fff;border-radius:20px;padding:10px 14px;color:#285322;font-weight:700">☁️ Cloud</button>
-<div id="cloudPanel" style="display:none;position:fixed;inset:0;background:#0007;z-index:20;align-items:center;justify-content:center;padding:18px">
-<div style="background:#fff;border-radius:22px;width:min(520px,100%);padding:24px">
-<button onclick="closeCloud()" style="float:right;border:0;background:none;font-size:28px">×</button>
-<h2>☁️ LIVI Cloud Backup</h2><p id="cloudStatus" style="color:#666">Not connected</p>
-<div id="cloudLogin"><input id="cloudEmail" type="email" placeholder="Email" style="margin-bottom:10px"><input id="cloudPassword" type="password" placeholder="Password (6+ characters)">
-<div style="display:flex;gap:10px;margin-top:12px"><button onclick="cloudSignUp()" style="flex:1;padding:14px;background:#285322;color:#fff;border:0;border-radius:14px">Create Account</button><button onclick="cloudSignIn()" style="flex:1;padding:14px;background:#fff;border:1px solid #ddd;border-radius:14px">Login</button></div></div>
-<div id="cloudLogged" style="display:none"><p id="cloudUser"></p><button onclick="cloudSync()" style="width:100%;padding:14px;background:#285322;color:#fff;border:0;border-radius:25px">☁️ Sync Now</button><button onclick="cloudRestore()" style="width:100%;padding:14px;margin-top:10px;background:#fff;border:1px solid #ddd;border-radius:25px">Restore From Cloud</button><button onclick="cloudLogout()" style="width:100%;padding:14px;margin-top:10px;background:#fff;border:1px solid #ddd;border-radius:25px">Log Out</button></div>
-</div></div><main>
+<main>
 <div class="eyebrow">DASHBOARD</div><div class="title" id="monthTitle"></div>
 <div class="month"><select id="monthSelect"></select></div>
 <section class="grid">
@@ -186,18 +162,5 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 function exportData(){let b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ledger-backup.json';a.click()}
 function importData(){file.click();file.onchange=()=>{let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(Array.isArray(x)){data=x;localStorage.setItem('ledgerData',JSON.stringify(data));init()}}catch(e){alert('Invalid backup file')}};r.readAsText(file.files[0])}}
 monthSelect.onchange=render;search.oninput=render;filter.onchange=render;init();
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('button').forEach(function(btn) {
-    if ((btn.textContent || '').trim().includes('Cloud')) {
-      btn.addEventListener('click', function () {
-        var p = document.getElementById('cloudPanel');
-        if (p) p.style.display = 'flex';
-      });
-    }
-  });
-});
 </script>
 </body></html>
